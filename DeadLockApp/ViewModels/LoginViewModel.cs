@@ -88,7 +88,8 @@ namespace DeadLockApp.ViewModels
             var isSuccess = await AuthenticateUserAsync(Username, Password);
             if (isSuccess)
             {
-                await Shell.Current.GoToAsync("..");
+                // Перенаправление на BuildCreatePage
+                await Shell.Current.GoToAsync(nameof(BuildCreatePage)); // Переход на BuildCreatePage
                 IsErrorVisible = true;
                 ErrorMessage = "Успешно вошел";
             }
@@ -132,7 +133,10 @@ namespace DeadLockApp.ViewModels
                     await SecureStorage.SetAsync("role_code", result.User.RoleCode ?? "");
                     await SecureStorage.SetAsync("username", result.User.Name ?? "");
                 }
-
+                else
+                {
+                    Debug.WriteLine($"Penis");
+                }
                 return true;
             }
             catch (Exception ex)

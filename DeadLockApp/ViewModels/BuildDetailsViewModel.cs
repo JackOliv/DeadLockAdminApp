@@ -94,8 +94,14 @@ private string _buildName;
 
             DeleteBuildCommand = new Command(async () => await DeleteBuildAsync());
         }
+        private bool _isAuthor;
+        public bool IsAuthor
+        {
+            get => _isAuthor;
+            set => SetProperty(ref _isAuthor, value);
+        }
 
-        public async Task LoadBuildDetailsAsync(int buildId)
+        public async Task LoadBuildDetailsAsync(int characterdId, int buildId)
         {
             try
             {
@@ -103,8 +109,7 @@ private string _buildName;
                 SelectedBuildId = buildId;
 
                 var client = new HttpClient();
-                var response = await client.GetStringAsync($"{BuildDetailsApiUrl}{buildId}/builds");
-
+                var response = await client.GetStringAsync($"{BuildDetailsApiUrl}{characterdId}/builds");
                 Debug.WriteLine("API Response:");
                 Debug.WriteLine(response);  // Отладочный вывод полученного ответа
 
@@ -117,7 +122,20 @@ private string _buildName;
                     {
                         BuildName = build.Name;
                         BuildAuthor = build.Author;
+                        var currentUserId = await SecureStorage.GetAsync("username");
 
+                        // Проверяем, совпадает ли ID автора билда с текущим пользователем
+                        if (build.Author.ToString() == currentUserId || currentUserId == "Admin User")
+                        {
+                            Debug.WriteLine($"1isautor is - {IsAuthor}");
+                            IsAuthor = true;
+                            Debug.WriteLine($"2isautor is - {IsAuthor}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"3isautor is - {IsAuthor}");
+                            IsAuthor = false;
+                        }
                         StartItems.Clear();
                         MiddleItems.Clear();
                         EndItems.Clear();

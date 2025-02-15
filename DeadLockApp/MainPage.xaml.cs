@@ -7,8 +7,8 @@ namespace DeadLockApp
         {
             InitializeComponent();
             BindingContext = new ItemsViewModel();
-
         }
+       
     }
 
 }
