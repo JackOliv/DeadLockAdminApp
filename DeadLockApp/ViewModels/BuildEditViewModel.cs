@@ -87,7 +87,7 @@ namespace DeadLockApp.ViewModels
                 var buildRequest = new
                 {
                     name = BuildName,
-                    character_id = 1, // Пока что фиксированный ID персонажа, можно изменить
+                    character_id = Data.CurrentCharacter.Id, 
                     items = GetItemsList()
                 };
 
