@@ -87,12 +87,14 @@ private string _buildName;
         }
 
         public ICommand DeleteBuildCommand { get; }
+        public ICommand EditBuildCommand { get; }
 
         public BuildDetailsViewModel()
         {
             // Инициализация команды удаления
 
             DeleteBuildCommand = new Command(async () => await DeleteBuildAsync());
+            EditBuildCommand = new Command(async () => await EditBuildAsync());
         }
         private bool _isAuthor;
         public bool IsAuthor
@@ -165,6 +167,11 @@ private string _buildName;
             {
                 Debug.WriteLine($"Error loading build details: {ex.Message}");
             }
+        }
+
+        private async Task EditBuildAsync()
+        {
+            await Shell.Current.GoToAsync($"{nameof(BuildEditPage)}?buildId={SelectedBuildId}");
         }
 
         private async Task DeleteBuildAsync()

@@ -154,10 +154,16 @@ namespace DeadLockApp.ViewModels
             {
                 int partId = selectionPage.PartId;
 
-                // Получаем ViewModel страницы создания билда
                 if (Shell.Current.Navigation.NavigationStack.FirstOrDefault(p => p is BuildCreatePage) is BuildCreatePage buildPage)
                 {
                     if (buildPage.BindingContext is BuildCreateViewModel buildViewModel)
+                    {
+                        buildViewModel.AddItemToBuild(item, partId);
+                    }
+                }
+                if (Shell.Current.Navigation.NavigationStack.FirstOrDefault(p => p is BuildEditPage) is BuildEditPage editPage)
+                {
+                    if (editPage.BindingContext is BuildEditViewModel buildViewModel)
                     {
                         buildViewModel.AddItemToBuild(item, partId);
                     }

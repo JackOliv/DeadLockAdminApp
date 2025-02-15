@@ -88,8 +88,8 @@ namespace DeadLockApp.ViewModels
             var isSuccess = await AuthenticateUserAsync(Username, Password);
             if (isSuccess)
             {
-                // Перенаправление на BuildCreatePage
-                await Shell.Current.GoToAsync(nameof(BuildCreatePage)); // Переход на BuildCreatePage
+                
+                await Shell.Current.GoToAsync("..");
                 IsErrorVisible = true;
                 ErrorMessage = "Успешно вошел";
             }
