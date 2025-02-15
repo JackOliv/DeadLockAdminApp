@@ -51,7 +51,7 @@ namespace DeadLockApp.ViewModels
 
     
 
-private string _buildName;
+        private string _buildName;
         private string _buildAuthor;
 
         // Добавляем свойство для хранения ID текущего билда
