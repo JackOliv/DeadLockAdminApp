@@ -3,6 +3,9 @@ using System.Text.Json;
 using System.Text;
 using System.Windows.Input;
 using DeadLockApp.Models;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace DeadLockApp.ViewModels
 {
@@ -30,7 +33,7 @@ namespace DeadLockApp.ViewModels
         public ICommand AddSituationalItemCommand { get; }
         public ICommand RemoveCommand { get; }
         public ICommand SaveBuildCommand { get; }
-
+        
         public BuildEditViewModel()
         {
             AddStartItemCommand = new Command(() => OpenItemSelection(1));
@@ -50,6 +53,7 @@ namespace DeadLockApp.ViewModels
 
         public void AddItemToBuild(Item item, int partId)
         {
+            Debug.WriteLine($"Добавлен предмет: {item.Name} с картинкой {item.Image} в категорию {partId}");
             switch (partId)
             {
                 case 1: StartItems.Add(item); break;
@@ -66,7 +70,79 @@ namespace DeadLockApp.ViewModels
             EndItems.Remove(item);
             SituationalItems.Remove(item);
         }
+        public async Task LoadBuildData(Build build)
+        {
+            StartItems.Clear();
+            MiddleItems.Clear();
+            EndItems.Clear();
+            SituationalItems.Clear();
 
+            Debug.WriteLine("Загрузка данных билда...");
+
+            foreach (var buildItem in build.Items)
+            {
+                var item = await GetItemById(buildItem.ItemId); // Дожидаемся получения предмета
+
+                if (item != null)
+                {
+                    item.Image = $"http://192.168.2.20/public/storage/{item.Image}"; ;
+                    Debug.WriteLine($"Загружен предмет: {item.Name} с картинкой {item.Image} в категорию {buildItem.PartId}");
+                    switch (buildItem.PartId)
+                    {
+                        case 1: StartItems.Add(item); break;
+                        case 2: MiddleItems.Add(item); break;
+                        case 3: EndItems.Add(item); break;
+                        case 4: SituationalItems.Add(item); break;
+                    }
+                }
+            }
+
+            OnPropertyChanged(nameof(StartItems));
+            OnPropertyChanged(nameof(MiddleItems));
+            OnPropertyChanged(nameof(EndItems));
+            OnPropertyChanged(nameof(SituationalItems));
+        }
+
+
+        // Метод для получения предмета по его ID
+        private async Task<Item> GetItemById(int itemId)
+        {
+            var allItems = await GetAllItems(); // Дожидаемся завершения задачи
+            return allItems.FirstOrDefault(i => i.Id == itemId);
+        }
+
+        private static readonly HttpClient _httpClient = new HttpClient();
+        public async Task<List<Item>> GetAllItems()
+        {
+            // Адрес API для получения предметов
+            string url = "http://192.168.2.20/api/items";
+
+            try
+            {
+                // Отправляем GET запрос
+                var response = await _httpClient.GetStringAsync(url);
+
+                // Десериализуем JSON-ответ в объект ApiResponse2
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse2>(response);
+
+                // Проверяем, если предметы существуют, возвращаем их
+                if (apiResponse?.Предметы != null)
+                {
+                    return apiResponse.Предметы;
+                }
+                else
+                {
+                    // Если предметы не найдены, возвращаем пустой список
+                    return new List<Item>();
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                // Логируем или обрабатываем ошибки запроса
+                Console.WriteLine($"Request error: {e.Message}");
+                return new List<Item>(); // Возвращаем пустой список в случае ошибки
+            }
+        }
         private async void SaveBuild()
         {
             try

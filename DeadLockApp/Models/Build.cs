@@ -10,9 +10,6 @@ namespace DeadLockApp.Models
 
         [JsonPropertyName("item_id")]
         public int ItemId { get; set; }
-
-        [JsonPropertyName("item_name")]
-        public string ItemName { get; set; }
     }
 
     public class Build

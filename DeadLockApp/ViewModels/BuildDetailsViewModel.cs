@@ -49,7 +49,15 @@ namespace DeadLockApp.ViewModels
         }
 
 
-    
+        public string BuildName
+        {
+            get => _buildName;
+            set
+            {
+                _buildName = value;
+                OnPropertyChanged(nameof(BuildName));
+            }
+        }
 
         private string _buildName;
         private string _buildAuthor;
@@ -66,15 +74,13 @@ namespace DeadLockApp.ViewModels
             }
         }
 
-        public string BuildName
+        private Build _currentBuild;
+        public Build CurrentBuild
         {
-            get => _buildName;
-            set
-            {
-                _buildName = value;
-                OnPropertyChanged(nameof(BuildName));
-            }
+            get => _currentBuild;
+            set => SetProperty(ref _currentBuild, value);
         }
+
 
         public string BuildAuthor
         {
@@ -91,8 +97,6 @@ namespace DeadLockApp.ViewModels
 
         public BuildDetailsViewModel()
         {
-            // Инициализация команды удаления
-
             DeleteBuildCommand = new Command(async () => await DeleteBuildAsync());
             EditBuildCommand = new Command(async () => await EditBuildAsync());
         }
@@ -122,6 +126,7 @@ namespace DeadLockApp.ViewModels
                     var build = data.Builds.FirstOrDefault(b => b.Id == buildId);
                     if (build != null)
                     {
+                        CurrentBuild = build;
                         BuildName = build.Name;
                         BuildAuthor = build.Author;
                         var currentUserId = await SecureStorage.GetAsync("username");
@@ -129,13 +134,10 @@ namespace DeadLockApp.ViewModels
                         // Проверяем, совпадает ли ID автора билда с текущим пользователем
                         if (build.Author.ToString() == currentUserId || currentUserId == "Admin User")
                         {
-                            Debug.WriteLine($"1isautor is - {IsAuthor}");
                             IsAuthor = true;
-                            Debug.WriteLine($"2isautor is - {IsAuthor}");
                         }
                         else
                         {
-                            Debug.WriteLine($"3isautor is - {IsAuthor}");
                             IsAuthor = false;
                         }
                         StartItems.Clear();
@@ -171,8 +173,13 @@ namespace DeadLockApp.ViewModels
 
         private async Task EditBuildAsync()
         {
-            await Shell.Current.GoToAsync($"{nameof(BuildEditPage)}?buildId={SelectedBuildId}");
+            if (CurrentBuild != null)
+            {
+                string serializedBuild = JsonSerializer.Serialize(CurrentBuild);
+                await Shell.Current.GoToAsync($"{nameof(BuildEditPage)}?build={Uri.EscapeDataString(serializedBuild)}");
+            }
         }
+
 
         private async Task DeleteBuildAsync()
         {
