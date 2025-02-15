@@ -6,6 +6,7 @@ using DeadLockApp.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Org.Apache.Http.Protocol;
 
 namespace DeadLockApp.ViewModels
 {
@@ -33,7 +34,10 @@ namespace DeadLockApp.ViewModels
         public ICommand AddSituationalItemCommand { get; }
         public ICommand RemoveCommand { get; }
         public ICommand SaveBuildCommand { get; }
-        
+        bool isLoaded;
+        int buildID;
+        public static Item SelectedItem { get; set; }
+
         public BuildEditViewModel()
         {
             AddStartItemCommand = new Command(() => OpenItemSelection(1));
@@ -46,10 +50,15 @@ namespace DeadLockApp.ViewModels
 
         private async void OpenItemSelection(int partId)
         {
-            string route = $"{nameof(ItemSelectionPage)}?partId={partId}";
-            await Shell.Current.GoToAsync(route);
-        }
+            SelectedItem = null; // Сбрасываем перед открытием
 
+            await Shell.Current.GoToAsync($"{nameof(ItemSelectionPage)}?partId={partId}");
+
+            if (SelectedItem != null)
+            {
+                AddItemToBuild(SelectedItem, partId);
+            }
+        }
 
         public void AddItemToBuild(Item item, int partId)
         {
@@ -70,13 +79,14 @@ namespace DeadLockApp.ViewModels
             EndItems.Remove(item);
             SituationalItems.Remove(item);
         }
+        
         public async Task LoadBuildData(Build build)
         {
-            StartItems.Clear();
-            MiddleItems.Clear();
-            EndItems.Clear();
-            SituationalItems.Clear();
-
+            if (isLoaded == false)
+            {
+                buildID = build.Id;
+                BuildName = build.Name;
+                isLoaded= true;
             Debug.WriteLine("Загрузка данных билда...");
 
             foreach (var buildItem in build.Items)
@@ -101,6 +111,7 @@ namespace DeadLockApp.ViewModels
             OnPropertyChanged(nameof(MiddleItems));
             OnPropertyChanged(nameof(EndItems));
             OnPropertyChanged(nameof(SituationalItems));
+            }
         }
 
 
@@ -162,6 +173,7 @@ namespace DeadLockApp.ViewModels
 
                 var buildRequest = new
                 {
+                    
                     name = BuildName,
                     character_id = Data.CurrentCharacter.Id, 
                     items = GetItemsList()
@@ -176,9 +188,9 @@ namespace DeadLockApp.ViewModels
                     "application/json"
                 );
 
-                var response = await httpClient.PostAsync("http://192.168.2.20/api/builds/create", content);
+                var response = await httpClient.PostAsync($"http://192.168.2.20/api/builds/{buildID}", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
-
+                
                 if (response.IsSuccessStatusCode)
                 {
                     await Application.Current.MainPage.DisplayAlert("Успех", "Билд сохранен!", "Ок");
@@ -186,11 +198,13 @@ namespace DeadLockApp.ViewModels
                 else
                 {
                     await Application.Current.MainPage.DisplayAlert("Ошибка", $"Ошибка сохранения билда: {responseContent}", "Ок");
+                    Debug.WriteLine($"Ошибка сохранения билда: {responseContent}");
                 }
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Ошибка", $"Ошибка запроса: {ex.Message}", "Ок");
+                Debug.WriteLine($"Ошибка запроса: {ex.Message}");
             }
         }
         private List<object> GetItemsList()

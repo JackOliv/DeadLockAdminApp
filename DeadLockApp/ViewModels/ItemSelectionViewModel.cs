@@ -182,7 +182,8 @@ namespace DeadLockApp.ViewModels
             }
 
             // Закрываем страницу выбора предмета
-            await Shell.Current.Navigation.PopAsync();
+            await Shell.Current.GoToAsync("..");
+
         }
     }
 }
