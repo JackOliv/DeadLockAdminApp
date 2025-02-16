@@ -67,12 +67,18 @@ namespace DeadLockApp.ViewModels
         }
 
         public ICommand LoginCommand { get; }
+        public ICommand RegisterCommand { get; }
 
         public LoginViewModel()
         {
             LoginCommand = new Command(async () => await LoginAsync());
+            RegisterCommand = new Command(async () => await RegisterAsync());
         }
 
+        private async Task RegisterAsync()
+        {
+            await Shell.Current.GoToAsync(nameof(RegisterPage));
+        }
         private async Task LoginAsync()
         {
             IsErrorVisible = false;
@@ -88,8 +94,8 @@ namespace DeadLockApp.ViewModels
             var isSuccess = await AuthenticateUserAsync(Username, Password);
             if (isSuccess)
             {
-                
-                await Shell.Current.GoToAsync("..");
+                // Перенаправление на BuildCreatePage
+                await Shell.Current.GoToAsync(nameof(BuildCreatePage)); // Переход на BuildCreatePage
                 IsErrorVisible = true;
                 ErrorMessage = "Успешно вошел";
             }
@@ -132,6 +138,14 @@ namespace DeadLockApp.ViewModels
                 {
                     await SecureStorage.SetAsync("role_code", result.User.RoleCode ?? "");
                     await SecureStorage.SetAsync("username", result.User.Name ?? "");
+                    var testValue = await SecureStorage.GetAsync("username");
+                    Debug.WriteLine($"SecureStorage Test Value: {testValue}");
+                    Debug.WriteLine($"User.Name: {result.User?.Name}");
+                    Debug.WriteLine($"User.RoleCode: {result.User?.RoleCode}");
+                    await SecureStorage.SetAsync("test_key", "test_value");
+                    var storedValue = await SecureStorage.GetAsync("test_key");
+                    Debug.WriteLine($"Stored test_key: {storedValue}");
+
                 }
                 else
                 {
